@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="id" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lipzy Panel - Complete Integrated Portal</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Orbitron:wght@500;700;900&family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        cyber: ['Orbitron', 'sans-serif'],
+                        poppins: ['Poppins', 'sans-serif'],
+                    },
+                    colors: {
+                        brandRed: '#EF4444',
+                        brandDarkRed: '#B91C1C',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            overflow-x: hidden;
+            background-color: #000;
+        }
+        
+        /* --- ANIMATIONS --- */
+        @keyframes pulse-scale {
+            0%, 100% { transform: scale(1); filter: drop-shadow(0 0 15px rgba(239, 68, 68, 0.4)); }
+            50% { transform: scale(1.08); filter: drop-shadow(0 0 30px rgba(239, 68, 68, 0.8)); }
+        }
+        .breathing { animation: pulse-scale 1.8s ease-in-out infinite; }
+        .pressed { transform: scale(0.94) !important; filter: drop-shadow(0 0 35px rgba(239, 68, 68, 0.9)) !important; transition: transform 0.1s ease; }
+        
+        @keyframes scan-laser {
+            0% { top: 0%; opacity: 0.8; }
+            50% { opacity: 1; }
+            100% { top: 100%; opacity: 0.8; }
+        }
+        .laser-line {
+            position: absolute; left: 0; width: 100%; height: 3px;
+            background: linear-gradient(90deg, transparent, #ef4444, transparent);
+            box-shadow: 0 0 12px #ef4444;
+            animation: scan-laser 1.2s ease-in-out infinite alternate;
+        }
+        
+        @keyframes radar-spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .radar-sweep { animation: radar-spin 4s linear infinite; }
+        
+        .btn-3d {
+            transition: all 0.1s ease;
+            box-shadow: 0 8px 0 #b91c1c, 0 15px 20px rgba(0, 0, 0, 0.15);
+        }
+        .btn-3d:active {
+            transform: translateY(6px);
+            box-shadow: 0 2px 0 #b91c1c, 0 5px 10px rgba(0, 0, 0, 0.15);
+        }
+        
+        .card-3d {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 10px 25px -5px rgba(220, 38, 38, 0.15), 0 8px 10px -6px rgba(220, 38, 38, 0.1);
+        }
+        .card-3d:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 15px 30px -5px rgba(220, 38, 38, 0.25);
+        }
+        
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        .page-transition {
+            transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1), transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.8s ease;
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(0.9); }
+        }
+        .animate-live { animation: pulse-dot 1.5s infinite ease-in-out; }
+    </style>
+</head>
+<body class="h-full min-h-screen bg-white selection:bg-red-500 selection:text-white relative">
+
+    <!-- ================= STAGE 1: BIOMETRIC FINGERPRINT SCANNER ================= -->
+    <div id="page1" class="absolute inset-0 z-30 bg-white flex flex-col justify-between items-center p-6 page-transition">
+        <div class="absolute inset-0 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:24px_24px] opacity-60 pointer-events-none"></div>
+
+        <header class="z-10 text-center mt-6">
+            <h1 class="text-2xl sm:text-3xl font-cyber font-bold text-gray-900 tracking-wider">IDENTITY VERIFICATION</h1>
+            <p class="text-xs sm:text-sm text-gray-500 mt-1">Press and hold fingerprint sensor to authenticate</p>
+        </header>
+
+        <main class="z-10 flex flex-col items-center justify-center my-auto relative">
+            <div class="relative w-64 h-64 sm:w-72 sm:h-72 flex items-center justify-center">
+                <div class="absolute inset-0 rounded-full border border-dashed border-red-300 radar-sweep pointer-events-none"></div>
+                
+                <div id="scannerRing" class="absolute inset-2 rounded-full border-4 border-white shadow-[0_0_25px_rgba(0,0,0,0.08)] bg-gradient-to-b from-gray-50 to-white flex items-center justify-center transition-all duration-300">
+                    <div class="absolute inset-4 rounded-full border-2 border-red-100"></div>
+                    <div id="laserContainer" class="absolute inset-6 rounded-full overflow-hidden hidden pointer-events-none">
+                        <div class="laser-line"></div>
+                    </div>
+                </div>
+
+                <div id="fingerprintBtn" class="relative z-20 w-36 h-36 sm:w-40 sm:h-40 rounded-full bg-white shadow-[0_10px_30px_rgba(0,0,0,0.12)] border border-gray-100 flex items-center justify-center cursor-pointer breathing transition-transform duration-200" role="button" aria-label="Fingerprint Scanner">
+                    <div class="relative w-28 h-28 sm:w-32 sm:h-32 rounded-full bg-white flex items-center justify-center shadow-inner">
+                        <i class="fa-solid fa-fingerprint text-6xl sm:text-7xl text-red-500 filter drop-shadow-[0_4px_6px_rgba(239,68,68,0.3)]"></i>
+                    </div>
+                </div>
+
+                <svg class="absolute inset-0 w-full h-full -rotate-90 pointer-events-none" viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" r="46" fill="none" stroke="#f3f4f6" stroke-width="3"></circle>
+                    <circle id="progressCircle" cx="50" cy="50" r="46" fill="none" stroke="#ef4444" stroke-width="3" stroke-dasharray="289.02" stroke-dashoffset="289.02" stroke-linecap="round" class="transition-all duration-75"></circle>
+                </svg>
+            </div>
+
+            <div class="mt-8 text-center">
+                <div id="statusText" class="text-xs font-cyber uppercase tracking-widest text-gray-400 mb-1">System Standby</div>
+                <div id="percentageText" class="text-4xl sm:text-5xl font-cyber font-black text-gray-900 tracking-tight">0%</div>
+            </div>
+        </main>
+
+        <footer class="z-10 text-center text-xs text-gray-400 mb-2">
+            <p>© 2026 CyberSecure Systems. High-End Biometric UI.</p>
+        </footer>
+    </div>
+
+
+    <!-- ================= STAGE 2: LIPZY PANEL DASHBOARD ================= -->
+    <div id="page2" class="absolute inset-0 z-20 bg-white bg-[radial-gradient(rgba(220,38,38,0.1)_1px,transparent_1px)] [background-size:24px_24px] flex flex-col justify-between opacity-0 pointer-events-none page-transition scale-95">
+        
+        <header class="w-full pt-10 pb-4 px-6 text-center z-10">
+            <h1 class="text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight">LIPZY <span class="text-red-600">PANEL</span></h1>
+            <p class="text-sm text-gray-500 mt-1 max-w-xs mx-auto">Exclusive Red & White Futuristic Dashboard Engine</p>
+        </header>
+
+        <main class="w-full my-auto py-4 z-10">
+            <div class="px-6 mb-3 flex items-center justify-between">
+                <h2 class="text-sm font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2">
+                    <i class="fa-solid fa-sliders text-red-600"></i> Geser Menu Fitur
+                </h2>
+                <span class="text-xs text-red-500 font-semibold animate-pulse"><i class="fa-solid fa-arrow-right-arrow-left mr-1"></i> Swipe</span>
+            </div>
+
+            <div class="flex overflow-x-auto no-scrollbar gap-5 px-6 py-4 snap-x snap-mandatory focus:outline-none">
+                <div class="snap-center shrink-0 w-72 h-80 bg-gradient-to-br from-red-600 to-red-700 rounded-3xl p-6 flex flex-col justify-between text-white card-3d border-2 border-red-500/30 relative overflow-hidden group">
+                    <div class="absolute -right-6 -bottom-6 text-red-800/30 text-9xl font-black pointer-events-none group-hover:scale-110 transition-transform"><i class="fa-solid fa-crown"></i></div>
+                    <div class="flex justify-between items-start">
+                        <div class="w-14 h-14 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center text-2xl border border-white/20 shadow-inner"><i class="fa-solid fa-crown text-yellow-300"></i></div>
+                        <span class="text-[10px] font-bold tracking-widest uppercase bg-white/20 px-2.5 py-1 rounded-full">Pajangan</span>
+                    </div>
+                    <div>
+                        <h3 class="text-2xl font-bold tracking-wide">LIPZY OWNER</h3>
+                        <p class="text-xs text-red-100 mt-2 leading-relaxed opacity-90">Pemilik resmi sistem dan pengembang utama seluruh skrip dan protokol keamanan panel.</p>
+                    </div>
+                    <div class="pt-2 border-t border-white/10 flex items-center justify-between text-xs font-medium text-red-200">
+                        <span>Status: Verified</span><i class="fa-solid fa-shield-halved"></i>
+                    </div>
+                </div>
+
+                <div class="snap-center shrink-0 w-72 h-80 bg-white rounded-3xl p-6 flex flex-col justify-between text-gray-800 card-3d border-2 border-red-100 relative overflow-hidden group">
+                    <div class="absolute -right-6 -bottom-6 text-red-50 text-9xl font-black pointer-events-none group-hover:scale-110 transition-transform"><i class="fa-solid fa-paper-plane"></i></div>
+                    <div class="flex justify-between items-start">
+                        <div class="w-14 h-14 rounded-2xl bg-red-50 flex items-center justify-center text-2xl border border-red-100 shadow-sm text-red-600"><i class="fa-solid fa-paper-plane"></i></div>
+                        <span class="text-[10px] font-bold tracking-widest uppercase bg-red-100 text-red-600 px-2.5 py-1 rounded-full">Pajangan</span>
+                    </div>
+                    <div>
+                        <h3 class="text-2xl font-bold tracking-wide text-gray-900">SENDER</h3>
+                        <p class="text-xs text-gray-500 mt-2 leading-relaxed">Modul pengiriman pesan otomatis berkecepatan tinggi dengan enkripsi tingkat lanjut.</p>
+                    </div>
+                    <div class="pt-2 border-t border-gray-100 flex items-center justify-between text-xs font-medium text-red-600">
+                        <span>Ready Engine</span><i class="fa-solid fa-bolt"></i>
+                    </div>
+                </div>
+
+                <div class="snap-center shrink-0 w-72 h-80 bg-white rounded-3xl p-6 flex flex-col justify-between text-gray-800 card-3d border-2 border-red-100 relative overflow-hidden group">
+                    <div class="absolute -right-6 -bottom-6 text-red-50 text-9xl font-black pointer-events-none group-hover:scale-110 transition-transform"><i class="fa-solid fa-bug"></i></div>
+                    <div class="flex justify-between items-start">
+                        <div class="w-14 h-14 rounded-2xl bg-red-50 flex items-center justify-center text-2xl border border-red-100 shadow-sm text-red-600"><i class="fa-brands fa-whatsapp"></i></div>
+                        <span class="text-[10px] font-bold tracking-widest uppercase bg-red-100 text-red-600 px-2.5 py-1 rounded-full">Pajangan</span>
+                    </div>
+                    <div>
+                        <h3 class="text-2xl font-bold tracking-wide text-gray-900">BUG WHATSAPP</h3>
+                        <p class="text-xs text-gray-500 mt-2 leading-relaxed">Pajangan modul utilitas pengujian kestabilan pesan instan platform pesan.</p>
+                    </div>
+                    <div class="pt-2 border-t border-gray-100 flex items-center justify-between text-xs font-medium text-red-600">
+                        <span>Protocol v2</span><i class="fa-solid fa-terminal"></i>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="w-full pb-10 px-6 z-10 flex flex-col items-center">
+            <div class="w-full max-w-sm">
+                <!-- Tombol START ENGINE -->
+                <button onclick="handleStartEngine()" id="startBtn" class="w-full py-4 px-6 bg-red-600 hover:bg-red-700 text-white font-extrabold text-lg rounded-2xl btn-3d flex items-center justify-center gap-3 tracking-wide uppercase border border-red-500">
+                    <i class="fa-solid fa-power-off text-xl"></i>
+                    <span>START ENGINE</span>
+                </button>
+            </div>
+            <p class="text-xs text-gray-400 mt-4 text-center font-medium">&copy; 2026 Lipzy Panel Engine. All Rights Reserved.</p>
+        </footer>
+    </div>
+
+
+    <!-- ================= STAGE 3: INTRO VIDEO WITH SKIP BUTTON ================= -->
+    <div id="page3" class="absolute inset-0 z-40 bg-black flex flex-col justify-center items-center opacity-0 pointer-events-none page-transition">
+        <div class="absolute inset-0 w-full h-full overflow-hidden z-0">
+            <video id="introVideo" class="absolute inset-0 w-full h-full object-cover" autoplay playsinline>
+                <source src="https://yourimageshare.com/ib/u4yj1WuNYT.mp4" type="video/mp4">
+                Browser Anda tidak mendukung tag video.
+            </video>
+        </div>
+        <!-- Tombol Skip Modern -->
+        <button onclick="skipToIntro()" class="absolute top-8 right-8 bg-white/15 backdrop-blur-md text-white border border-white/40 px-6 py-2.5 text-sm font-semibold tracking-wider rounded-full z-50 shadow-lg hover:bg-white hover:text-black transition-all">
+            SKIP <i class="fa-solid fa-forward ml-1"></i>
+        </button>
+    </div>
+
+
+    <!-- ================= STAGE 4: MAIN DASHBOARD & TOOLS (FINAL MENU) ================= -->
+    <div id="page4" class="absolute inset-0 z-50 bg-gray-50 text-gray-800 flex flex-col justify-between opacity-0 pointer-events-none page-transition overflow-y-auto">
+        <div class="max-w-md mx-auto w-full bg-white min-h-screen flex flex-col shadow-2xl relative overflow-hidden">
+            
+            <header class="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-white/80 backdrop-blur sticky top-0 z-20">
+                <div class="flex items-center space-x-2">
+                    <div class="w-8 h-8 bg-red-600 rounded-lg flex items-center justify-center text-white font-bold shadow-md shadow-red-200">
+                        <i class="fa-solid fa-shield-halved text-sm"></i>
+                    </div>
+                    <h1 class="font-bold text-gray-900 tracking-tight text-lg">WAXPRO <span class="text-red-600">TOOLS</span></h1>
+                </div>
+                <div class="flex items-center space-x-2 bg-red-50 px-3 py-1.5 rounded-full border border-red-100">
+                    <span class="w-2 h-2 rounded-full bg-red-600 animate-live"></span>
+                    <span class="text-xs font-semibold text-red-600 tracking-wide uppercase">System Active</span>
+                </div>
+            </header>
+
+            <main class="flex-1 p-5 space-y-6 overflow-y-auto">
+                <section class="relative w-full rounded-2xl overflow-hidden shadow-xl bg-black border border-gray-100 aspect-[16/10] group">
+                    <video id="promoVideo" class="w-full h-full object-cover pointer-events-none select-none" autoplay muted playsinline loop>
+                        <source src="https://yourimageshare.com/ib/9UyJBEWKKP.mp4" type="video/mp4">
+                    </video>
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/30 pointer-events-none"></div>
+                    <div class="absolute top-3 right-3 bg-black/40 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 flex items-center space-x-1.5">
+                        <span class="w-2.5 h-2.5 rounded-full bg-red-600 animate-live"></span>
+                        <span class="text-white text-xs font-bold tracking-wider">• Live</span>
+                    </div>
+                    <div class="absolute bottom-3 left-3 text-white">
+                        <div id="realTimeClock" class="text-lg font-bold tracking-tight drop-shadow">00:00:00</div>
+                        <div id="realTimeDate" class="text-xs font-medium text-gray-200 drop-shadow">Senin, 01 Januari 2026</div>
+                    </div>
+                </section>
+
+                <div id="audioNotice" class="bg-red-50 border border-red-200 rounded-xl p-3.5 flex items-center space-x-3 text-sm text-red-800 shadow-sm">
+                    <div class="w-9 h-9 rounded-full bg-red-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-red-200">
+                        <i class="fa-solid fa-volume-high animate-bounce" id="audioIconIndicator"></i>
+                    </div>
+                    <div>
+                        <p class="font-semibold text-xs uppercase tracking-wide text-red-900">Status Audio: <span id="audioStatusText" class="text-red-600 font-bold">Bersuara (Aktif)</span></p>
+                        <p class="text-[11px] text-red-700/80 mt-0.5">Suara akan otomatis mati jika Anda mengklik salah satu menu fitur di bawah.</p>
+                    </div>
+                </div>
+
+                <section class="space-y-3">
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-sm font-bold tracking-wider text-gray-800 uppercase flex items-center space-x-2">
+                            <i class="fa-solid fa-sliders text-red-600"></i>
+                            <span>Menu Fitur Utama</span>
+                        </h2>
+                    </div>
+
+                    <div class="flex space-x-4 overflow-x-auto no-scrollbar pb-3 pt-1 px-1 snap-x">
+                        <div onclick="handleMenuClick('Bug WhatsApp')" class="snap-start shrink-0 w-36 sm:w-40 bg-white border border-gray-100 hover:border-red-300 rounded-2xl p-4 shadow-md cursor-pointer flex flex-col justify-between group active:scale-95">
+                            <div class="w-12 h-12 rounded-xl bg-red-50 text-red-600 flex items-center justify-center text-xl group-hover:bg-red-600 group-hover:text-white transition-all shadow-sm"><i class="fa-solid fa-bug"></i></div>
+                            <div class="mt-4">
+                                <h3 class="font-bold text-gray-900 text-sm tracking-tight group-hover:text-red-600">BUG WHATSAPP</h3>
+                                <p class="text-[10px] text-gray-400 mt-0.5 font-medium">Modul & Payload</p>
+                            </div>
+                        </div>
+                        <div onclick="handleMenuClick('Sender')" class="snap-start shrink-0 w-36 sm:w-40 bg-white border border-gray-100 hover:border-red-300 rounded-2xl p-4 shadow-md cursor-pointer flex flex-col justify-between group active:scale-95">
+                            <div class="w-12 h-12 rounded-xl bg-red-50 text-red-600 flex items-center justify-center text-xl group-hover:bg-red-600 group-hover:text-white transition-all shadow-sm"><i class="fa-solid fa-paper-plane"></i></div>
+                            <div class="mt-4">
+                                <h3 class="font-bold text-gray-900 text-sm tracking-tight group-hover:text-red-600">SENDER</h3>
+                                <p class="text-[10px] text-gray-400 mt-0.5 font-medium">Blast & Mass</p>
+                            </div>
+                        </div>
+                        <div onclick="handleMenuClick('Tools')" class="snap-start shrink-0 w-36 sm:w-40 bg-white border border-gray-100 hover:border-red-300 rounded-2xl p-4 shadow-md cursor-pointer flex flex-col justify-between group active:scale-95">
+                            <div class="w-12 h-12 rounded-xl bg-red-50 text-red-600 flex items-center justify-center text-xl group-hover:bg-red-600 group-hover:text-white transition-all shadow-sm"><i class="fa-solid fa-toolbox"></i></div>
+                            <div class="mt-4">
+                                <h3 class="font-bold text-gray-900 text-sm tracking-tight group-hover:text-red-600">TOOLS</h3>
+                                <p class="text-[10px] text-gray-400 mt-0.5 font-medium">Utilities</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </main>
+
+            <footer class="py-4 text-center border-t border-gray-100 text-xs text-gray-400 bg-white">
+                <p>&copy; 2026 • Bug WhatsApp & Tools Dashboard. All Rights Reserved.</p>
+            </footer>
+        </div>
+    </div>
+
+    <!-- Custom Modal -->
+    <div id="customModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[70] flex items-center justify-center p-4 hidden opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-2xl max-w-xs w-full p-6 shadow-2xl border border-gray-100 transform scale-95 transition-transform duration-300 text-center" id="modalBox">
+            <div class="w-14 h-14 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl shadow-inner">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <h3 id="modalTitle" class="font-bold text-gray-900 text-base">Menu Dipilih</h3>
+            <p id="modalMessage" class="text-xs text-gray-500 mt-2 leading-relaxed">Suara video telah dimatikan secara otomatis.</p>
+            <button onclick="closeModal()" class="mt-5 w-full py-2.5 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl text-xs shadow-lg shadow-red-200 transition-all">
+                Mengerti & Lanjutkan
+            </button>
+        </div>
+    </div>
+
+
+    <!-- ================= CONTROLLER SCRIPT ================= -->
+    <script>
+        // --- STAGE 1: FINGERPRINT SCANNER ---
+        const fingerprintBtn = document.getElementById('fingerprintBtn');
+        const progressCircle = document.getElementById('progressCircle');
+        const percentageText = document.getElementById('percentageText');
+        const statusText = document.getElementById('statusText');
+        const scannerRing = document.getElementById('scannerRing');
+        const laserContainer = document.getElementById('laserContainer');
+        const page1 = document.getElementById('page1');
+        const page2 = document.getElementById('page2');
+        const page3 = document.getElementById('page3');
+        const page4 = document.getElementById('page4');
+
+        const circumference = 2 * Math.PI * 46; 
+        let progressInterval = null;
+        let currentProgress = 0;
+        let isCompleted = false;
+
+        function setProgress(percent) {
+            const offset = circumference - (percent / 100) * circumference;
+            progressCircle.style.strokeDashoffset = offset;
+            percentageText.innerText = Math.floor(percent) + '%';
+        }
+
+        function startScanning() {
+            if (isCompleted) return;
+            fingerprintBtn.classList.add('pressed');
+            fingerprintBtn.classList.remove('breathing');
+            scannerRing.classList.add('shadow-[0_0_35px_rgba(239,68,68,0.2)]', 'border-red-500');
+            laserContainer.classList.remove('hidden');
+            statusText.innerText = 'Scanning Biometrics...';
+            statusText.classList.add('text-red-500', 'font-semibold');
+
+            if (progressInterval) clearInterval(progressInterval);
+            progressInterval = setInterval(() => {
+                currentProgress += 2;
+                if (currentProgress >= 100) {
+                    currentProgress = 100;
+                    setProgress(100);
+                    clearInterval(progressInterval);
+                    transitionToDashboard();
+                } else {
+                    setProgress(currentProgress);
+                }
+            }, 20);
+        }
+
+        function stopScanning() {
+            if (isCompleted) return;
+            if (progressInterval) clearInterval(progressInterval);
+            fingerprintBtn.classList.remove('pressed');
+            fingerprintBtn.classList.add('breathing');
+            scannerRing.classList.remove('shadow-[0_0_35px_rgba(239,68,68,0.2)]', 'border-red-500');
+            laserContainer.classList.add('hidden');
+            statusText.innerText = 'System Standby';
+            statusText.classList.remove('text-red-500', 'font-semibold');
+
+            let drainInterval = setInterval(() => {
+                currentProgress -= 8;
+                if (currentProgress <= 0) {
+                    currentProgress = 0;
+                    setProgress(0);
+                    clearInterval(drainInterval);
+                } else {
+                    setProgress(currentProgress);
+                }
+            }, 15);
+        }
+
+        function transitionToDashboard() {
+            isCompleted = true;
+            statusText.innerText = 'Access Granted!';
+            statusText.classList.add('text-green-600');
+
+            setTimeout(() => {
+                page1.classList.add('opacity-0', 'scale-105', 'pointer-events-none');
+                page2.classList.remove('opacity-0', 'pointer-events-none', 'scale-95');
+                page2.classList.add('scale-100');
+            }, 500);
+        }
+
+        fingerprintBtn.addEventListener('mousedown', startScanning);
+        window.addEventListener('mouseup', stopScanning);
+        fingerprintBtn.addEventListener('touchstart', (e) => { e.preventDefault(); startScanning(); });
+        window.addEventListener('touchend', stopScanning);
+
+
+        // --- STAGE 2 TO STAGE 3 (START ENGINE) ---
+        function handleStartEngine() {
+            const btn = document.getElementById('startBtn');
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Memuat Intro...';
+            btn.disabled = true;
+
+            setTimeout(() => {
+                page2.classList.add('opacity-0', 'scale-90', 'pointer-events-none');
+                page3.classList.remove('opacity-0', 'pointer-events-none');
+                
+                // Play Intro Video
+                const introVideo = document.getElementById('introVideo');
+                introVideo.play().catch(e => console.log("Autoplay error:", e));
+
+                // Auto-skip when intro video ends
+                introVideo.onended = function() {
+                    skipToIntro();
+                };
+            }, 500);
+        }
+
+
+        // --- STAGE 3 TO STAGE 4 (SKIP OR ENDED) ---
+        function skipToIntro() {
+            const introVideo = document.getElementById('introVideo');
+            introVideo.pause();
+
+            page3.classList.add('opacity-0', 'pointer-events-none');
+            page4.classList.remove('opacity-0', 'pointer-events-none');
+
+            // Play secondary promo video & start clock
+            const promoVideo = document.getElementById('promoVideo');
+            promoVideo.muted = false;
+            promoVideo.play().catch(() => {
+                document.body.addEventListener('click', () => {
+                    promoVideo.muted = false;
+                    promoVideo.play();
+                }, { once: true });
+            });
+        }
+
+
+        // --- STAGE 4 CONTROLLERS (Real-time clock & menu click) ---
+        function updateRealTime() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            const clockEl = document.getElementById('realTimeClock');
+            const dateEl = document.getElementById('realTimeDate');
+            
+            if (clockEl) clockEl.textContent = `${hours}:${minutes}:${seconds}`;
+            if (dateEl) {
+                const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+                dateEl.textContent = now.toLocaleDateString('id-ID', options);
+            }
+        }
+        setInterval(updateRealTime, 1000);
+        updateRealTime();
+
+        function handleMenuClick(menuName) {
+            const promoVideo = document.getElementById('promoVideo');
+            promoVideo.muted = true;
+
+            const audioNotice = document.getElementById('audioNotice');
+            const audioStatusText = document.getElementById('audioStatusText');
+            const audioIconIndicator = document.getElementById('audioIconIndicator');
+
+            if(audioNotice) {
+                audioNotice.className = 'bg-gray-100 border border-gray-200 rounded-xl p-3.5 flex items-center space-x-3 text-sm text-gray-700 shadow-sm';
+                audioStatusText.textContent = 'Suara Dimatikan (Muted)';
+                audioStatusText.className = 'text-gray-900 font-bold';
+                audioIconIndicator.className = 'fa-solid fa-volume-xmark';
+            }
+
+            showModal(menuName);
+        }
+
+        function showModal(menu) {
+            const modal = document.getElementById('customModal');
+            const modalBox = document.getElementById('modalBox');
+            document.getElementById('modalTitle').textContent = `Fitur: ${menu}`;
+            document.getElementById('modalMessage').textContent = `Anda mengklik menu ${menu}. Sesuai protokol, suara video telah otomatis dinonaktifkan.`;
+
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modalBox.classList.remove('scale-95');
+                modalBox.classList.add('scale-100');
+            }, 10);
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('customModal');
+            const modalBox = document.getElementById('modalBox');
+            modal.classList.add('opacity-0');
+            modalBox.classList.remove('scale-100');
+            modalBox.classList.add('scale-95');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        }
+    </script>
+</body>
+</html>
